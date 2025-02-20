@@ -35,6 +35,11 @@ func main() {
 	userUsecase := usecase.NewUserUsecase(userRepo)
 	http.NewUserHandler(api, userUsecase)
 
+	// Child module
+	childRepo := repository.NewChildRepository(db)
+	childUsecase := usecase.NewChildUsecase(childRepo)
+	http.NewChildHandler(api, childUsecase)
+
 	// Start server
 	log.Fatal(app.Listen(cfg.AppPort))
 }
