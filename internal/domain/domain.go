@@ -50,11 +50,12 @@ type TeacherAttendance struct {
 	ID              uint      `gorm:"primaryKey"`
 	UserID          uint      `gorm:"not null"`
 	Date            time.Time `gorm:"not null"`
-	ClockIn         time.Time `gorm:"not null"`
+	ClockIn         *time.Time
 	ClockOut        *time.Time
-	OvertimeRegular int `gorm:"default:0"`
-	OvertimeMorning int `gorm:"default:0"`
-	OvertimeEvening int `gorm:"default:0"`
+	WorkHour        float32 `gorm:"default:0"`
+	OvertimeRegular int     `gorm:"default:0"`
+	OvertimeMorning int     `gorm:"default:0"`
+	OvertimeEvening int     `gorm:"default:0"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	DeletedAt       gorm.DeletedAt `gorm:"index"`
@@ -162,4 +163,15 @@ type ChildCondition struct {
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
 	DeletedAt      gorm.DeletedAt `gorm:"index"`
+}
+
+type WorkLocation struct {
+	ID        uint    `gorm:"primaryKey"`
+	Name      string  `gorm:"size:255;not null"`
+	Address   string  `gorm:"type:text;not null"`
+	Latitude  float64 `gorm:"not null"`
+	Longitude float64 `gorm:"not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

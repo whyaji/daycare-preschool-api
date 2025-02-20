@@ -19,8 +19,5 @@ func main() {
 		log.Fatal("Failed to connect to database")
 	}
 
-	scripts.RunMigrations(db)
-	scripts.RunAddRoles(db)
-	scripts.RunAddAdminUser(db)
 	scripts.RunAddWorkLocation(db)
 }

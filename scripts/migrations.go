@@ -30,5 +30,6 @@ func migrate(db *gorm.DB) error {
 		&domain.ChildToilet{},
 		&domain.ChildCondition{},
 		&domain.LeaveRequest{},
+		&domain.WorkLocation{},
 	)
 }
