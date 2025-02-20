@@ -8,12 +8,13 @@ import (
 
 // Registered user Email list model
 type RegisteredEmail struct {
-	ID        uint   `gorm:"primaryKey"`
-	Email     string `gorm:"size:255;unique;not null"`
-	Roles     []Role `gorm:"many2many:registered_email_roles;"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	ID           uint       `gorm:"primaryKey"`
+	Email        string     `gorm:"size:255;unique;not null"`
+	Roles        []Role     `gorm:"many2many:registered_email_roles;"`
+	RegisteredAt *time.Time `gorm:"default:null"`
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	DeletedAt    gorm.DeletedAt `gorm:"index"`
 }
 
 // User model (for both Parents and Bunda Workers) with multi role
@@ -74,16 +75,22 @@ type LeaveRequest struct {
 
 // Child model (supports multiple parents & teachers)
 type Child struct {
-	ID         uint      `gorm:"primaryKey"`
-	Name       string    `gorm:"size:255;not null"`
-	Nickname   string    `gorm:"size:255;not null"`
-	BirthPlace string    `gorm:"size:255;not null"`
-	BirthDate  time.Time `gorm:"not null"`
-	Parents    []User    `gorm:"many2many:child_parents;"`
-	Teachers   []User    `gorm:"many2many:child_teachers;"`
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
-	DeletedAt  gorm.DeletedAt `gorm:"index"`
+	ID               uint      `gorm:"primaryKey"`
+	Name             string    `gorm:"size:255;not null"`
+	Nickname         string    `gorm:"size:255;not null"`
+	BirthPlace       string    `gorm:"size:255;not null"`
+	BirthDate        time.Time `gorm:"not null"`
+	Gender           string    `gorm:"type:enum('male','female');not null"`
+	AlergyInfo       string    `gorm:"type:text"`
+	Notes            string    `gorm:"type:text"`
+	NumberOfSiblings int       `gorm:"default:0"`
+	LivingWith       string    `gorm:"size:255;not null"`
+	RegisteredDate   time.Time `gorm:"not null"`
+	Parents          []User    `gorm:"many2many:child_parents;"`
+	Teachers         []User    `gorm:"many2many:child_teachers;"`
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        gorm.DeletedAt `gorm:"index"`
 }
 
 // Attendance for Child

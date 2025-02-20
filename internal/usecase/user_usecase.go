@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -14,10 +15,14 @@ import (
 type UserUsecase interface {
 	CheckRegisteredEmail(email string) (*domain.RegisteredEmail, error)
 	Register(user *domain.User, registeredEmail *domain.RegisteredEmail) error
+	AssignRegisteredAtEmail(registeredEmail domain.RegisteredEmail) error
 	GetUserByEmail(email string) (*domain.User, error)
 	GetUserById(id uint) (*domain.User, error)
 	VerifyPassword(user *domain.User, password string) error
 	Login(user *domain.User) (*string, *string, error)
+	CheckUserAdmin(userId uint) (bool, error)
+	RegisterEmail(registeredEmail *domain.RegisteredEmail) error
+	ParseRoles(rolesString string) ([]domain.Role, error)
 }
 
 type userUsecase struct {
@@ -47,6 +52,12 @@ func (u *userUsecase) Register(user *domain.User, registeredEmail *domain.Regist
 	// Add roles from registered_email table to user.Roles
 	user.Roles = append(user.Roles, registeredEmail.Roles...)
 	return u.repo.Create(user)
+}
+
+func (u *userUsecase) AssignRegisteredAtEmail(registeredEmail domain.RegisteredEmail) error {
+	now := time.Now()
+	registeredEmail.RegisteredAt = &now
+	return u.repo.UpdateRegisteredEmail(&registeredEmail)
 }
 
 func (u *userUsecase) GetUserByEmail(email string) (*domain.User, error) {
@@ -90,4 +101,46 @@ func (u *userUsecase) Login(user *domain.User) (*string, *string, error) {
 	expString := exp.Format(time.RFC3339)
 
 	return &t, &expString, nil
+}
+
+func (u *userUsecase) CheckUserAdmin(userId uint) (bool, error) {
+	user, err := u.repo.GetByIdWithRoles(userId)
+	if err != nil {
+		return false, err
+	}
+	for _, role := range user.Roles {
+		if role.Name == "admin" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (u *userUsecase) RegisterEmail(registeredEmail *domain.RegisteredEmail) error {
+	return u.repo.CreateRegisteredEmail(registeredEmail)
+}
+
+func (u *userUsecase) ParseRoles(rolesString string) ([]domain.Role, error) {
+	roles, err := u.repo.GetAllRoles()
+	if err != nil {
+		return nil, err
+	}
+
+	// rolesString "[1,2]" to []uint{1, 2}
+	var roleIds []uint
+	if err := json.Unmarshal([]byte(rolesString), &roleIds); err != nil {
+		return nil, err
+	}
+
+	// Get roles from roleIds
+	var returnRoles []domain.Role
+	for _, roleId := range roleIds {
+		for _, role := range roles {
+			if role.ID == roleId {
+				returnRoles = append(returnRoles, role)
+			}
+		}
+	}
+
+	return returnRoles, nil
 }
