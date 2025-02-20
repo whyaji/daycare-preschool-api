@@ -26,7 +26,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (r *userRepository) GetByEmail(email string) (*domain.User, error) {
 	var user domain.User
-	err := r.db.Where("email = ?", email).First(&user).Error
+	err := r.db.Preload("Roles").Where("email = ?", email).First(&user).Error
 	return &user, err
 }
 
