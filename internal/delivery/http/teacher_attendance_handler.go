@@ -7,6 +7,7 @@ import (
 	"github.com/whyaji/daycare-preschool-api/internal/domain"
 	"github.com/whyaji/daycare-preschool-api/internal/usecase"
 	"github.com/whyaji/daycare-preschool-api/pkg/middleware"
+	"github.com/whyaji/daycare-preschool-api/pkg/types"
 	"github.com/whyaji/daycare-preschool-api/pkg/utils"
 )
 
@@ -18,9 +19,10 @@ func NewTeacherAttendanceHandler(api fiber.Router, usecase usecase.TeacherAttend
 	handler := &TeacherAttendanceHandler{usecase}
 	teacherAttendanceGroup := api.Group("/teacher-attendances")
 	teacherAttendanceGroup.Use(middleware.JWTProtected)
-	teacherAttendanceGroup.Post("/clock-in", handler.ClockIn)
-	teacherAttendanceGroup.Put("/clock-out", handler.ClockOut)
-	teacherAttendanceGroup.Get("/last", handler.GetLastTeacherAttendance)
+	teacherAttendanceGroup.Post("/me/clock-in", handler.ClockIn)
+	teacherAttendanceGroup.Put("/me/clock-out", handler.ClockOut)
+	teacherAttendanceGroup.Get("/me/last", handler.GetLastTeacherAttendance)
+	teacherAttendanceGroup.Get("/me", handler.GetUserTeacherAttendance)
 	return handler
 }
 
@@ -205,4 +207,29 @@ func (h *TeacherAttendanceHandler) GetLastTeacherAttendance(c *fiber.Ctx) error 
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"data": teacherAttendance})
+}
+
+func (h *TeacherAttendanceHandler) GetUserTeacherAttendance(c *fiber.Ctx) error {
+	// pagination get teacher attendance by user id
+	id := utils.GetUserIDFromJwt(c)
+	isTeacher, err := h.usecase.CheckUserTeacher(uint(*id))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if !isTeacher {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "You are not allowed to create teacher attendance"})
+	}
+
+	page, limit := utils.GetPageAndLimitFromQuery(c)
+
+	teacherAttendances, totalPage, err := h.usecase.GetTeacherAttendanceByUserId(uint(*id), page, limit)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(types.PaginationResponse{
+		Page:      page,
+		TotalPage: totalPage,
+		Data:      teacherAttendances,
+	})
 }

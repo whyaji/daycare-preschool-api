@@ -17,6 +17,7 @@ type TeacherAttendanceUsecase interface {
 	UpdateTeacherAttendance(teacherAttendance *domain.TeacherAttendance) error
 	GetLastTeacherAttendanceByUserId(userId uint) (domain.TeacherAttendance, error)
 	CheckIsInWorkLocation(latitude, longitude float64) (bool, error)
+	GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error)
 }
 
 type teacherAttendanceUsecase struct {
@@ -83,6 +84,10 @@ func (u *teacherAttendanceUsecase) UpdateTeacherAttendance(teacherAttendance *do
 
 func (u *teacherAttendanceUsecase) GetLastTeacherAttendanceByUserId(userId uint) (domain.TeacherAttendance, error) {
 	return u.repo.GetLastTeacherAttendanceByUserId(userId)
+}
+
+func (u *teacherAttendanceUsecase) GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error) {
+	return u.repo.GetTeacherAttendanceByUserId(userId, page, limit)
 }
 
 func (u *teacherAttendanceUsecase) CheckIsInWorkLocation(latitude, longitude float64) (bool, error) {
