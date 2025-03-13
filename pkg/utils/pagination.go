@@ -24,6 +24,24 @@ func GetPageAndLimitFromQuery(c *fiber.Ctx) (page, limit int) {
 	return page, limit
 }
 
+func GetOrderByAndSortFromQuery(c *fiber.Ctx) (orderBy, sort string) {
+	orderBy = c.Query("orderBy")
+	if orderBy == "" {
+		orderBy = "id"
+	}
+
+	sort = c.Query("sort")
+	if sort == "" {
+		sort = "desc"
+	}
+
+	return orderBy, sort
+}
+
+func GetSearchFromQuery(c *fiber.Ctx) string {
+	return c.Query("search")
+}
+
 func toSnakeCase(str string) string {
 	var snakeCase string
 	for i, char := range str {
@@ -68,12 +86,26 @@ func GetFilterConditionFromQuery(c *fiber.Ctx) map[string]any {
 
 func GetPaginationFilterFromQuery(c *fiber.Ctx) types.PaginationFilter {
 	page, limit := GetPageAndLimitFromQuery(c)
+	orderBy, sort := GetOrderByAndSortFromQuery(c)
 	filters := GetFilterConditionFromQuery(c)
+	search := GetSearchFromQuery(c)
 	return types.PaginationFilter{
 		Page:    page,
 		Limit:   limit,
 		Filters: filters,
+		OrderBy: orderBy,
+		Sort:    sort,
+		Search:  search,
 	}
+}
+
+func ApplySearch(query *gorm.DB, search string, columns []string) *gorm.DB {
+	if search != "" {
+		for _, column := range columns {
+			query = query.Or(fmt.Sprintf("%s LIKE ?", column), "%"+search+"%")
+		}
+	}
+	return query
 }
 
 // ApplyFilters dynamically applies filters to a GORM query

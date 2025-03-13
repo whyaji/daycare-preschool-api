@@ -65,7 +65,11 @@ func (r *teacherAttendanceRepository) GetTeacherAttendanceByUserId(userId uint, 
 		return nil, 0, err
 	}
 
-	err = query.Order("created_at desc").Offset((paginationFilter.Page - 1) * paginationFilter.Limit).Limit(paginationFilter.Limit).Find(&teacherAttendances).Error
+	err = query.
+		Order(paginationFilter.OrderBy + " " + paginationFilter.Sort).
+		Offset((paginationFilter.Page - 1) * paginationFilter.Limit).
+		Limit(paginationFilter.Limit).Find(&teacherAttendances).Error
+
 	if err != nil {
 		return nil, 0, err
 	}
