@@ -220,15 +220,15 @@ func (h *TeacherAttendanceHandler) GetUserTeacherAttendance(c *fiber.Ctx) error 
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "You are not allowed to create teacher attendance"})
 	}
 
-	page, limit := utils.GetPageAndLimitFromQuery(c)
+	paginationFilter := utils.GetPaginationFilterFromQuery(c)
 
-	teacherAttendances, totalPage, err := h.usecase.GetTeacherAttendanceByUserId(uint(*id), page, limit)
+	teacherAttendances, totalPage, err := h.usecase.GetTeacherAttendanceByUserId(uint(*id), paginationFilter)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(types.PaginationResponse{
-		Page:      page,
+		Page:      paginationFilter.Page,
 		TotalPage: totalPage,
 		Data:      teacherAttendances,
 	})

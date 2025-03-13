@@ -2,6 +2,8 @@ package repository
 
 import (
 	"github.com/whyaji/daycare-preschool-api/internal/domain"
+	"github.com/whyaji/daycare-preschool-api/pkg/types"
+	"github.com/whyaji/daycare-preschool-api/pkg/utils"
 	"gorm.io/gorm"
 )
 
@@ -11,7 +13,7 @@ type TeacherAttendanceRepository interface {
 	GetLastTeacherAttendanceByUserId(userId uint) (domain.TeacherAttendance, error)
 	UpdateTeacherAttendance(teacherAttendance *domain.TeacherAttendance) error
 	GetAllWorkLocation() ([]domain.WorkLocation, error)
-	GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error)
+	GetTeacherAttendanceByUserId(userId uint, pagingationFilter types.PaginationFilter) ([]domain.TeacherAttendance, int, error)
 }
 
 type teacherAttendanceRepository struct {
@@ -39,21 +41,36 @@ func (r *teacherAttendanceRepository) GetLastTeacherAttendanceByUserId(userId ui
 }
 
 // get pagination teacher attendance by user id
-func (r *teacherAttendanceRepository) GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error) {
+func (r *teacherAttendanceRepository) GetTeacherAttendanceByUserId(userId uint, paginationFilter types.PaginationFilter) ([]domain.TeacherAttendance, int, error) {
 	var teacherAttendances []domain.TeacherAttendance
 	var totalRecords int64
 
-	err := r.db.Model(&domain.TeacherAttendance{}).Where("user_id = ?", userId).Count(&totalRecords).Error
+	// Start query with base condition
+	query := r.db.Model(&domain.TeacherAttendance{}).Where("user_id = ?", userId)
+
+	// Apply year and month filter based on column date
+	query = utils.ApplyYearMonthFilter(query, paginationFilter.Filters, "date")
+
+	// filter is pagination.Filters without year and month
+	filters := paginationFilter.Filters
+	delete(filters, "year")
+	delete(filters, "month")
+
+	// Apply dynamic filters
+	query = utils.ApplyFilters(query, filters)
+
+	// Get total records count
+	err := query.Count(&totalRecords).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	err = r.db.Where("user_id = ?", userId).Order("created_at desc").Offset((page - 1) * limit).Limit(limit).Find(&teacherAttendances).Error
+	err = query.Order("created_at desc").Offset((paginationFilter.Page - 1) * paginationFilter.Limit).Limit(paginationFilter.Limit).Find(&teacherAttendances).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	totalPages := int((totalRecords + int64(limit) - 1) / int64(limit))
+	totalPages := int((totalRecords + int64(paginationFilter.Limit) - 1) / int64(paginationFilter.Limit))
 	return teacherAttendances, totalPages, nil
 }
 

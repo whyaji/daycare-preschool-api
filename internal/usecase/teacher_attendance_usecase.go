@@ -6,6 +6,7 @@ import (
 
 	"github.com/whyaji/daycare-preschool-api/internal/domain"
 	"github.com/whyaji/daycare-preschool-api/internal/repository"
+	"github.com/whyaji/daycare-preschool-api/pkg/types"
 )
 
 type TeacherAttendanceUsecase interface {
@@ -17,7 +18,7 @@ type TeacherAttendanceUsecase interface {
 	UpdateTeacherAttendance(teacherAttendance *domain.TeacherAttendance) error
 	GetLastTeacherAttendanceByUserId(userId uint) (domain.TeacherAttendance, error)
 	CheckIsInWorkLocation(latitude, longitude float64) (bool, error)
-	GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error)
+	GetTeacherAttendanceByUserId(userId uint, paginationFilter types.PaginationFilter) ([]domain.TeacherAttendance, int, error)
 }
 
 type teacherAttendanceUsecase struct {
@@ -86,8 +87,8 @@ func (u *teacherAttendanceUsecase) GetLastTeacherAttendanceByUserId(userId uint)
 	return u.repo.GetLastTeacherAttendanceByUserId(userId)
 }
 
-func (u *teacherAttendanceUsecase) GetTeacherAttendanceByUserId(userId uint, page int, limit int) ([]domain.TeacherAttendance, int, error) {
-	return u.repo.GetTeacherAttendanceByUserId(userId, page, limit)
+func (u *teacherAttendanceUsecase) GetTeacherAttendanceByUserId(userId uint, paginationFilter types.PaginationFilter) ([]domain.TeacherAttendance, int, error) {
+	return u.repo.GetTeacherAttendanceByUserId(userId, paginationFilter)
 }
 
 func (u *teacherAttendanceUsecase) CheckIsInWorkLocation(latitude, longitude float64) (bool, error) {
