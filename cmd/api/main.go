@@ -45,6 +45,11 @@ func main() {
 	teacherAttendanceUsecase := usecase.NewTeacherAttendanceUsecase(teacherAttendanceRepo)
 	http.NewTeacherAttendanceHandler(api, teacherAttendanceUsecase)
 
+	// Child Attendance module
+	childAttendanceRepo := repository.NewChildAttendanceRepository(db)
+	childAttendanceUsecase := usecase.NewChildAttendanceUsecase(childAttendanceRepo)
+	http.NewChildAttendanceHandler(api, childAttendanceUsecase)
+
 	// Start server
 	log.Fatal(app.Listen(cfg.AppPort))
 }
